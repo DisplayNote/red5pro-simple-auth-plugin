@@ -27,6 +27,7 @@ package com.red5pro.server.plugin.simpleauth.datasource.impl.roundtrip;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -474,12 +475,14 @@ public class RoundTripAuthValidator implements IAuthenticationValidator, IApplic
 	 *
 	 * @return JsonObject JSON payload response from the remote server
 	 */
-	public JsonObject invalidateCredentialsOverHttp(String username, String password, String token, String stream) {
+	public JsonObject invalidateCredentialsOverHttp(String type, String username, String password, String token,
+			String stream) {
 		JsonObject result = null;
 		CloseableHttpClient client = null;
 
 		try {
 			AuthData data = new AuthData();
+			data.setType(type);
 			data.setUsername(username);
 			data.setPassword(password);
 			data.setToken(token);
@@ -586,17 +589,29 @@ public class RoundTripAuthValidator implements IAuthenticationValidator, IApplic
 
 	@Override
 	public void appDisconnect(IConnection conn) {
+		logger.info("appDisconnect | Conn: {}", conn);
+		if (conn.hasAttribute("roletype"))
+			logger.info("appDisconnect | roletype " + conn.getStringAttribute("roletype"));
+		if (conn.hasAttribute("streamID"))
+			logger.info("appDisconnect | streamID " + conn.getStringAttribute("streamID"));
+		if (conn.hasAttribute("username"))
+			logger.info("appDisconnect | username " + conn.getStringAttribute("username"));
+		if (conn.hasAttribute("password"))
+			logger.info("appDisconnect | password " + conn.getStringAttribute("password"));
+		if (conn.hasAttribute("token"))
+			logger.info("appDisconnect | token " + conn.getStringAttribute("token"));
 
-		if (conn.hasAttribute("roletype") && conn.getStringAttribute("roletype").equals("publisher")
-				&& conn.hasAttribute("streamID") && conn.hasAttribute("username") && conn.hasAttribute("password")) {
+		if (conn.hasAttribute("roletype") && conn.hasAttribute("streamID") && conn.hasAttribute("username")
+				&& conn.hasAttribute("password")) {
 
+			String type = conn.getStringAttribute("roletype");
 			String username = conn.getStringAttribute("username");
 			String password = conn.getStringAttribute("password");
 			String streamID = conn.getStringAttribute("streamID");
 			String token = conn.getStringAttribute("token");
 
 			if (invalidateEndPoint != null && invalidateEndPoint.length() > 3) {
-				invalidateCredentialsOverHttp(username, password, token, streamID);
+				invalidateCredentialsOverHttp(type, username, password, token, streamID);
 			}
 		}
 	}
@@ -609,6 +624,7 @@ public class RoundTripAuthValidator implements IAuthenticationValidator, IApplic
 
 	@Override
 	public boolean appConnect(IConnection conn, Object[] params) {
+		logger.info("appConnect = {} - {}", conn, Arrays.asList(params));
 		// TODO Auto-generated method stub
 		return true;
 	}

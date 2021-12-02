@@ -201,6 +201,16 @@ public class AuthenticatorProvider {
 				}
 			} else if (connection instanceof IConnectorShell) {
 				return happyAuthenticator;
+
+			} else if (connection.getClass()
+					.getCanonicalName() == "com.red5pro.server.so.SharedObjectCapableConnection") {
+				// Allow connecting sharedobjects without authentication
+				return happyAuthenticator;
+			} else if (connection.getClass()
+					.getCanonicalName() == "com.red5pro.cluster.plugin.agent.SharedObjectConnector") {
+				// Allow connecting sharedobjects without authentication
+				return happyAuthenticator;
+
 			} else {
 				// unknown protocol
 				logger.error("Unknown connection type " + connection.getClass().getCanonicalName());
